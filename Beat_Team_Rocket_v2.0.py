@@ -2,6 +2,7 @@ import os
 import time
 import json
 import subprocess
+import threading
 import re
 import cv2
 import numpy as np
@@ -22,7 +23,7 @@ SCRCPY_DIR = os.path.abspath(".\\scrcpy-win64-v2.7")
 ADB_PATH = os.path.join(SCRCPY_DIR, "adb.exe")
 VISITED_FILE = "visited_pokestops.json"
 
-POS_POKESTOP = (540, 1440)
+POS_POKESTOP = (540, 1420)
 POS_TALK_SKIP = (540, 2150)
 POS_BATTLE_BTN = (540, 1730)
 POS_CONFIRM_BTN = (540, 2050)
@@ -37,6 +38,7 @@ POS_MENU_BALL = (540, 2110)
 POS_BAG_ICON = (840, 1880)
 POS_HEAL_CONFIRM = (540, 1910)
 POS_DEAD_BAG = (300, 320)
+
 
 # --- [工具程式：系統控制] ---
 def get_screenshot():
@@ -53,6 +55,7 @@ def get_screenshot():
         print(f"* 錯誤: {e}")
         return None
 
+
 def find_image(template_name, threshold=0.75, return_pos=False):
     path = f"assets/{template_name}"
     if not os.path.exists(path): return (False, None) if return_pos else False
@@ -68,14 +71,18 @@ def find_image(template_name, threshold=0.75, return_pos=False):
         return (max_val >= threshold, center)
     return max_val >= threshold
 
+
 def adb_back():
     subprocess.run(f'"{ADB_PATH}" shell input keyevent 4', shell=True, capture_output=True)
+
 
 def adb_swipe_random(start_base, end_base):
     s_x, s_y = start_base[0] + random.randint(-30, 30), start_base[1] + random.randint(-30, 30)
     e_x, e_y = end_base[0] + random.randint(-50, 50), end_base[1] + random.randint(-50, 50)
     duration = random.randint(180, 250)
-    subprocess.run(f'"{ADB_PATH}" shell input swipe {s_x} {s_y} {e_x} {e_y} {duration}', shell=True, capture_output=True)
+    subprocess.run(f'"{ADB_PATH}" shell input swipe {s_x} {s_y} {e_x} {e_y} {duration}', shell=True,
+                   capture_output=True)
+
 
 def ad_click_smart(target_pos):
     try:
@@ -84,12 +91,15 @@ def ad_click_smart(target_pos):
         curr_w, curr_h = (int(m.group(1)), int(m.group(2))) if m else (1080, 2400)
         real_x, real_y = int((target_pos[0] / 1080) * curr_w), int((target_pos[1] / 2400) * curr_h)
         subprocess.run(f'"{ADB_PATH}" shell input tap {real_x} {real_y}', shell=True, capture_output=True)
-    except: pass
+    except:
+        pass
+
 
 def get_random_point_in_circle(center, radius):
     angle = random.uniform(0, 2 * math.pi)
     r = radius * math.sqrt(random.uniform(0, 1))
     return (int(center[0] + r * math.cos(angle)), int(center[1] + r * math.sin(angle)))
+
 
 def ensure_nemo_open():
     hwnd = win32gui.FindWindow(None, NEMO_TITLE)
@@ -103,11 +113,13 @@ def ensure_nemo_open():
             os.chdir(old_dir)
             hwnd = win32gui.FindWindow(None, NEMO_TITLE)
         except Exception as e:
-            print(f"* 錯誤: {e}"); return None
+            print(f"* 錯誤: {e}");
+            return None
     if hwnd:
         windows = gw.getWindowsWithTitle(NEMO_TITLE)
         if windows and not windows[0].isMinimized: windows[0].minimize()
     return hwnd
+
 
 def move_location(lat, lng):
     hwnd = ensure_nemo_open()
@@ -118,15 +130,21 @@ def move_location(lat, lng):
         coord = f"{lat}, {lng}"
         win32gui.SendMessage(hwnd_edit, win32con.WM_SETTEXT, None, coord)
         time.sleep(0.5)
+
         def click_btn(btn):
             lp = (25 << 16) | 25
             win32gui.SendMessage(btn, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, lp)
             time.sleep(0.1)
             win32gui.SendMessage(btn, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, lp)
-        click_btn(hwnd_start); time.sleep(0.2); click_btn(hwnd_start)
+
+        click_btn(hwnd_start);
+        time.sleep(0.2);
+        click_btn(hwnd_start)
         print(f"- 傳送到座標: {coord}")
         return True
-    except: return False
+    except:
+        return False
+
 
 # --- [工具程式：雷達與計算] ---
 def get_moonani_targets(pkm_types=[]):
@@ -142,9 +160,12 @@ def get_moonani_targets(pkm_types=[]):
                 m = re.search(r'(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)', r)
                 if m: all_targets.append({"lat": float(m.group(1)), "lng": float(m.group(2))})
             return all_targets
-        except: return []
+        except:
+            return []
     else:
-        opt = Options(); opt.add_argument("--headless"); opt.add_argument("--log-level=3")
+        opt = Options();
+        opt.add_argument("--headless");
+        opt.add_argument("--log-level=3")
         driver = webdriver.Chrome(options=opt)
         try:
             for t in pkm_types:
@@ -161,20 +182,25 @@ def get_moonani_targets(pkm_types=[]):
                     try:
                         nxt = driver.find_element(By.LINK_TEXT, "Next")
                         if "disabled" in nxt.find_element(By.XPATH, "./..").get_attribute("class"): break
-                        nxt.click(); time.sleep(0.5)
-                    except: break
+                        nxt.click();
+                        time.sleep(0.5)
+                    except:
+                        break
             unique_targets = []
             seen = set()
             for t in all_targets:
                 key = (t['lat'], t['lng'])
                 if key not in seen: unique_targets.append(t); seen.add(key)
             return unique_targets
-        finally: driver.quit()
+        finally:
+            driver.quit()
+
 
 def calculate_distance(lat1, lon1, lat2, lon2):
     R = 6371
-    d_lat, d_lon = math.radians(lat2-lat1), math.radians(lon2-lon1)
-    a = math.sin(d_lat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lon/2)**2
+    d_lat, d_lon = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
+    a = math.sin(d_lat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(
+        d_lon / 2) ** 2
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
@@ -190,6 +216,7 @@ def get_cooldown_seconds(dist):
             return max(0, int(minutes * 60) - 20)
     return 7180
 
+
 def countdown(seconds, msg="Waiting"):
     if seconds <= 0: return
     for i in range(int(seconds), 0, -1):
@@ -198,52 +225,133 @@ def countdown(seconds, msg="Waiting"):
         time.sleep(1)
     print(f"\r- {msg}: 完成！          ")
 
+
 def load_json(f, d): return json.load(open(f, 'r')) if os.path.exists(f) else d
+
+
 def save_json(f, d): json.dump(d, open(f, 'w'))
+
 
 # --- [主程式邏輯] ---
 def run_bot():
+    global target_serial
+    subprocess.run(f'"{ADB_PATH}" disconnect', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     if os.path.exists(VISITED_FILE): os.remove(VISITED_FILE)
-    print("-" * 45 + "\n" + " " *12 + "Beat_Team_Rocket_v2.0\n" + "-" * 45)
-    print("[啟動前檢查清單]\n1. 硬體連線：手機以傳輸線連接至電腦，並確認開啟 USB 偵錯模式\n2. 傳送設置：GPS Joystick 使用抽屜模式縮至最小，並將抽屜與搖桿置於手機畫面右上角\n3. 遊戲環境：遊戲視角縮至最小，建議不要孵蛋\n4. 雷達設置：建議關閉遊戲內火箭隊雷達與超級火箭隊雷達\n5. 夥伴設置：建議攜帶給力好夥伴\n6. 物資準備：確保包包中有足夠的厲害傷藥與活力碎片，建議可以先刷路線獲得\n7. 打手確認：確認各屬性皆已安排對應的戰鬥小隊\n8. 安全提醒：建議執行時全程在旁觀看以利應對突發狀況\n9. 打預防針：沒有做好如果打輸會怎麼樣，我覺得我不會打輸\n" + "-" * 45)
+    print("-" * 45 + "\n" + " " * 12 + "Beat_Team_Rocket_v2.0\n" + "-" * 45)
+    print("[啟動前檢查清單]\n1. 硬體連線：手機以傳輸線連接至電腦，並確認開啟 USB 偵錯模式\n2. 傳送設置：GPS Joystick 使用抽屜模式縮至最小，並將抽屜與搖桿置於手機畫面右上角\n3. 遊戲環境：遊戲視角縮至最小，建議不要孵蛋\n4. 雷達設置：建議關閉遊戲內火箭隊雷達與超級火箭隊雷達\n5. 夥伴設置：建議攜帶給力好夥伴\n6. 物資準備：確保包包中有足夠的厲害傷藥與活力碎片，建議可以先刷路線獲得\n7. 打手確認：確認各屬性皆已安排對應的戰鬥小隊\n8. 安全提醒：建議執行時全程在旁觀看以利應對突發狀況\n9. 打預防針：沒有做好如果打輸會怎麼樣，我覺得我不會打輸，還有如果抓到 XXL 和 XXS 也不知道會怎麼樣\n" + "-" * 45)
 
     print("[輸入設定]")
+    conn_input = input("- 連線模式 (輸入 0 代表使用 USB 不拔線，輸入 1 代表使用 WiFi 可拔線): ").strip()
+    # 預設參數改為穩定度較高的 720p
+    scrcpy_params = '-m720 --max-fps 10 -b2m --no-audio --turn-screen-off'
+
+    if conn_input == "1":
+        print(f" - 使用 WiFi 連線模式")
+        phone_ip = input("  - 輸入手機 WiFi IP 地址: ").strip()
+        if phone_ip.count('.') == 3:
+            subprocess.run(f'"{ADB_PATH}" tcpip 5555', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(2)
+            subprocess.run(f'"{ADB_PATH}" connect {phone_ip}:5555', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(2)
+
+            check_output = subprocess.check_output(f'"{ADB_PATH}" devices', shell=True).decode()
+            if phone_ip in check_output:
+                print(f"  - 連線成功，已連線至 {phone_ip}")
+                print(f"  - 拔除傳輸線後，按 Enter 鍵繼續...")
+                input()
+                target_serial = f"{phone_ip}:5555"
+            else:
+                print(f"  - 連線失敗，使用 USB 連線模式。\n")
+                target_serial = ""
+        else:
+            print(f"  - IP 格式錯誤，使用 USB 連線模式。\n")
+            target_serial = ""
+    else:
+        if conn_input == "":
+            print(" - 輸入留空，使用 USB 連線模式\n")
+        elif conn_input == "0":
+            print(" - 輸入成功，使用 USB 連線模式\n")
+        else:
+            print(" - 輸入錯誤，使用 USB 連線模式\n")
+        target_serial = ""
+
     p_input = input("- 目標屬性 (輸入屬性英文，多個以半形逗號隔開，留空則預設為不指定): ").strip()
-    valid_types = ["normal", "fire", "water", "grass", "electric", "ice", "fighting", "poison", "ground", "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"]
+    valid_types = ["normal", "fire", "water", "grass", "electric", "ice", "fighting", "poison", "ground", "flying",
+                   "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"]
     p_types_list = []
     if p_input:
         raw_types = [t.strip().lower() for t in p_input.split(',')]
         all_valid = True
         for t in raw_types:
-            if t in valid_types: p_types_list.append(t)
-            else: all_valid = False
+            if t in valid_types:
+                p_types_list.append(t)
+            else:
+                all_valid = False
         if not all_valid or not p_types_list:
-            print(" - 輸入錯誤，預設為不指定"); p_types_list = []
-        else: print(" - 輸入成功，針對指定屬性")
-    else: print(" - 輸入留空，預設為不指定"); p_types_list = []
+            print(" - 輸入錯誤，預設為不指定");
+            p_types_list = []
+        else:
+            print(" - 輸入成功，針對指定屬性")
+    else:
+        print(" - 輸入留空，預設為不指定"); p_types_list = []
 
     p_type = p_types_list
-    r_limit = int(input("- 定期掃描雷達週期 (預設為10): ") or 10)
-    h_limit = int(input("- 定期復活補血週期 (預設為5): ") or 5)
+    r_input = input("- 定期掃描雷達週期 (輸入數字，預設為 5): ").strip()
+    if r_input == "":
+        r_limit = 5
+        print(" - 輸入留空，使用預設週期")
+    else:
+        try:
+            r_limit = int(r_input)
+            print(f" - 輸入成功，設定掃描雷達週期為: {r_limit}")
+        except ValueError:
+            r_limit = 5
+            print(f" - 輸入錯誤，使用預設週期")
+
+    # 2. 定期復活補血週期
+    h_input = input("- 定期復活補血週期 (輸入數字，預設為 5): ").strip()
+    if h_input == "":
+        h_limit = 5
+        print(" - 輸入留空，使用預設週期")
+    else:
+        try:
+            h_limit = int(h_input)
+            print(f" - 輸入成功，設定復活補血週期為: {h_limit}")
+        except ValueError:
+            h_limit = 5
+            print(f" - 輸入錯誤，使用預設週期")
     m_pos = input("- 起點座標 (輸入經緯度，留空則預設為大安森林公園): ").strip()
 
     if m_pos:
         try:
             m_lat, m_lng = map(float, m_pos.split(','))
-            curr_pos = {"lat": m_lat, "lng": m_lng}; print(" - 輸入成功，傳送到輸入的位址")
+            curr_pos = {"lat": m_lat, "lng": m_lng};
+            print(" - 輸入成功，傳送到輸入的位址")
         except:
-            curr_pos = {"lat": 25.032966, "lng": 121.535516}; print(" - 輸入錯誤，傳送到預設位置")
+            curr_pos = {"lat": 25.032966, "lng": 121.535516};
+            print(" - 輸入錯誤，傳送到預設位置")
     else:
-        curr_pos = {"lat": 25.032966, "lng": 121.535516}; print(" - 輸入留空，傳送到預設位置")
+        curr_pos = {"lat": 25.032966, "lng": 121.535516};
+        print(" - 輸入留空，傳送到預設位置")
 
+    check_devices = subprocess.check_output(f'"{ADB_PATH}" devices', shell=True).decode().strip()
+    lines = check_devices.split('\n')
+    if len(lines) < 2 or "device" not in lines[1]:
+        print("\n* 錯誤: 找不到任何已連線的手機！請檢查 USB 或 WiFi。")
+        input("* 按 Enter 鍵結束並重新檢查...")
+        sys.exit()
+
+    print("")
     ensure_nemo_open()
     os.chdir(SCRCPY_DIR)
     print("+ 啟動 Scrcpy...")
-    subprocess.Popen('scrcpy --window-title "Beat_Team_Rocket_v2.0" -m1080 --max-fps 15 -b2m --no-audio --turn-screen-off', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.Popen(f'scrcpy --window-title "Beat_Team_Rocket_v2.0" {scrcpy_params}', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     os.chdir("..")
     time.sleep(5)
 
     total, skip, won, heal_cnt, caught = 0, 0, 0, 0, 0
+    last_action_time = time.time()
     first_run = True
     while True:
         if first_run:
@@ -254,7 +362,8 @@ def run_bot():
                 for t in p_type:
                     print(f"- 正在爬蟲雷達: https://moonani.com/PokeList/rocket.php?type={t}")
             first_run = False
-        else: print("\n- 執行定期掃描雷達流程...")
+        else:
+            print("\n- 執行定期掃描雷達流程...")
 
         visited = load_json(VISITED_FILE, [])
         all_targets = get_moonani_targets(pkm_types=p_type)
@@ -264,82 +373,151 @@ def run_bot():
 
         for idx, target in enumerate(targets[:r_limit], 1):
             lat, lng, t_key = target['lat'], target['lng'], f"{target['lat']},{target['lng']}"
-            dist = calculate_distance(curr_pos['lat'], curr_pos['lng'], lat, lng)
-            wait = get_cooldown_seconds(dist)
+
+            theoretical_wait = get_cooldown_seconds(calculate_distance(curr_pos['lat'], curr_pos['lng'], lat, lng))
+            elapsed_time = time.time() - last_action_time
+            real_wait = max(0, theoretical_wait - elapsed_time)
+
             total += 1
-            print(f"\n- 目標 {idx} (總計:{total} | 跳過:{skip} | 打完:{won} | 捕捉:{caught})\n- 目標座標: {lat}, {lng} (距離:{dist:.2f}km)")
-            if wait > 0: countdown(wait, "冷卻時間")
+            dist_from_last = calculate_distance(curr_pos['lat'], curr_pos['lng'], lat, lng)
+
+            print(f"\n- 目標 {idx} (總計:{total} | 跳過:{skip} | 打完:{won} | 捕捉:{caught})")
+            print(f"- 目標座標: {lat}, {lng} (距離:{dist_from_last:.2f}km)")
+
+            if real_wait > 0:
+                countdown(real_wait, "冷卻時間")
 
             if move_location(lat, lng):
                 countdown(20, "傳送完畢, 等待載入地圖")
                 print("- 正在點擊火箭隊補給站...")
                 if find_image("fast.png", 0.85):
-                    ad_click_smart((540, 1630)); time.sleep(2)
+                    ad_click_smart((540, 1630));
+                    time.sleep(2)
 
                 entered = False
-                for _ in range(4):
-                    ad_click_smart((POS_POKESTOP[0] + random.randint(-20, 20), POS_POKESTOP[1] + random.randint(-20, 20)))
+                for _ in range(2):
+                    ad_click_smart(
+                        (POS_POKESTOP[0] + random.randint(-20, 20), POS_POKESTOP[1] + random.randint(-20, 20)))
                     time.sleep(3)
                     if find_image("close_button.png", 0.85) or find_image("battle.png", 0.8):
-                        entered = True; break
+                        entered = True;
+                        break
                     if not find_image("map.png", 0.90): adb_back(); time.sleep(2)
 
-                visited.append(t_key); save_json(VISITED_FILE, visited)
+                visited.append(t_key);
+                save_json(VISITED_FILE, visited)
                 if not entered:
                     print("- 跳過目標。")
-                    skip += 1; continue
+                    skip += 1;
+                    continue
 
                 battle_ready = False
-                for _ in range(25):
+                for _ in range(10):
                     if find_image("battle.png", 0.85):
-                        ad_click_smart(POS_BATTLE_BTN); time.sleep(1.5)
-                        ad_click_smart(POS_CONFIRM_BTN); time.sleep(2)
+                        ad_click_smart(POS_BATTLE_BTN);
+                        time.sleep(1.5)
+                        ad_click_smart(POS_CONFIRM_BTN);
+                        time.sleep(2)
                         if find_image("dead.png", 0.8):
-                            print("- 執行緊急復活流程..."); ad_click_smart(POS_DEAD_BAG); time.sleep(2)
+                            print("- 執行緊急復活流程...");
+                            ad_click_smart(POS_DEAD_BAG);
+                            time.sleep(1.5)
                             f, p = find_image("resurrect.png", 0.8, return_pos=True)
                             if f:
-                                ad_click_smart(p); time.sleep(1.5); ad_click_smart(POS_HEAL_CONFIRM); time.sleep(1.5)
-                                adb_back(); time.sleep(1.5); adb_back(); time.sleep(1.5)
-                            ad_click_smart(POS_CONFIRM_BTN); time.sleep(3)
-                        battle_ready = True; break
-                    ad_click_smart(POS_TALK_SKIP); time.sleep(1.5)
+                                ad_click_smart(p);
+                                time.sleep(1.5);
+                                ad_click_smart(POS_HEAL_CONFIRM);
+                                time.sleep(1.5)
+                                adb_back();
+                                time.sleep(1.5);
+                                adb_back();
+                                time.sleep(1.5)
+                            ad_click_smart(POS_CONFIRM_BTN);
+                            time.sleep(3)
+                        battle_ready = True;
+                        break
+                    ad_click_smart(POS_TALK_SKIP);
+                    time.sleep(1.5)
 
                 if battle_ready:
                     print("- 正在與火箭隊手下對戰中...")
-                    start, loop = time.time(), 0
-                    while time.time() - start < 300:
-                        ad_click_smart(get_random_point_in_circle(POS_ATTACK_CENTER, ATTACK_RADIUS))
-                        for pt in BATTLE_POINTS: ad_click_smart(pt)
-                        time.sleep(0.05)
-                        loop += 1
-                        if loop % 20 == 0:
+
+                    stop_battle = threading.Event()
+                    start_time = time.time()
+
+                    def attack_worker():
+                        while not stop_battle.is_set():
+                            # 瘋狂點擊
+                            ad_click_smart(get_random_point_in_circle(POS_ATTACK_CENTER, ATTACK_RADIUS))
+                            for pt in BATTLE_POINTS:
+                                ad_click_smart(pt)
+
+                    t = threading.Thread(target=attack_worker)
+                    t.start()
+                    try:
+                        while time.time() - start_time < 300:
                             if find_image("win.png", 0.75):
                                 curr_pos = {"lat": lat, "lng": lng}
-                                time.sleep(6); break
-                    print("- 正在捕捉暗影寶可夢...")
-                    adb_swipe_random(CATCH_SWIPE_START, CATCH_SWIPE_END); time.sleep(10)
-                    while True:
-                        if find_image("catched.png", 0.8):
-                            caught += 1; time.sleep(5)
-                            f_ok, p_ok = find_image("OK.png", 0.8, return_pos=True)
-                            ad_click_smart(p_ok if f_ok else POS_CATCH_CONFIRM_1); time.sleep(3)
-                            ad_click_smart(POS_CATCH_CONFIRM_2); time.sleep(5); break
-                        if find_image("map.png", 0.90): break
-                        adb_swipe_random(CATCH_SWIPE_START, CATCH_SWIPE_END); time.sleep(10)
+                                last_action_time = time.time()
+                                break
+                            time.sleep(5)
+                    finally:
+                        stop_battle.set()
+                        t.join()
 
-                    won += 1; heal_cnt += 1
+                    print("- 正在捕捉暗影寶可夢...")
+                    while True:
+                        adb_swipe_random(CATCH_SWIPE_START, CATCH_SWIPE_END)
+                        time.sleep(2.5)
+
+                        if not find_image("win.png", 0.70):
+                            time.sleep(8)
+
+                            if find_image("catched.png", 0.8):
+                                caught += 1
+                                time.sleep(2)
+                                f_ok, p_ok = find_image("OK.png", 0.8, return_pos=True)
+                                ad_click_smart(p_ok if f_ok else POS_CATCH_CONFIRM_1)
+                                time.sleep(3)
+                                ad_click_smart(POS_CATCH_CONFIRM_2)
+                                time.sleep(2)
+                                break
+
+                        if find_image("map.png", 0.90):
+                            break
+
+                    won += 1;
+                    heal_cnt += 1
                     print("- 目標處理結束。")
                     if heal_cnt >= h_limit:
                         print("\n- 執行定期復活補血流程...")
-                        ad_click_smart(POS_MENU_BALL); time.sleep(1.5); ad_click_smart(POS_BAG_ICON); time.sleep(2)
+                        ad_click_smart(POS_MENU_BALL);
+                        time.sleep(1.5);
+                        ad_click_smart(POS_BAG_ICON);
+                        time.sleep(2)
                         f1, p1 = find_image("resurrect.png", 0.8, return_pos=True)
                         if f1:
-                            ad_click_smart(p1); time.sleep(1.5); ad_click_smart(POS_HEAL_CONFIRM); time.sleep(1.5); adb_back(); time.sleep(1.5)
+                            ad_click_smart(p1);
+                            time.sleep(1.5);
+                            ad_click_smart(POS_HEAL_CONFIRM);
+                            time.sleep(1.5);
+                            adb_back();
+                            time.sleep(1.5)
                         f2, p2 = find_image("medicine.png", 0.8, return_pos=True)
                         if f2:
-                            ad_click_smart(p2); time.sleep(1.5); ad_click_smart(POS_HEAL_CONFIRM); time.sleep(1.5); adb_back(); time.sleep(1.5)
-                        adb_back(); time.sleep(1.5); heal_cnt = 0
+                            ad_click_smart(p2);
+                            time.sleep(1.5);
+                            ad_click_smart(POS_HEAL_CONFIRM);
+                            time.sleep(1.5);
+                            adb_back();
+                            time.sleep(1.5)
+                        adb_back();
+                        time.sleep(1.5);
+                        heal_cnt = 0
+
 
 if __name__ == "__main__":
-    try: run_bot()
-    except KeyboardInterrupt: print("\n\n~ 腳本終止")
+    try:
+        run_bot()
+    except KeyboardInterrupt:
+        print("\n\n~ 腳本終止")
