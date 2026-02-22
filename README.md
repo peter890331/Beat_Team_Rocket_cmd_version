@@ -1,4 +1,4 @@
-# Beat_Team_Rocket
+# Beat_Team_Rocket_cmd_version
 Beat_Team_Rocket_v2.0, made by Peter Yu.  
 
 > 一個在Pokémon GO中自動打火箭隊手下並捕捉暗影寶可夢的外掛腳本。    
