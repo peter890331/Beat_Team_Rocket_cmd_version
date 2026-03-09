@@ -13,11 +13,31 @@ Beat_Team_Rocket_v2.0, made by Peter Yu.
 
 ---
 
-在之前做 new_autoshinyhunter 時就很想做的腳本，終於做完了。
+## Foreword
+In Pokémon Go, Team GO Rocket grunts invade PokéStops and challenge players to battles, where defeating them allows players to rescue Shadow Pokémon, which inherently possess a unique attack bonus that makes them extremely powerful in battles just as they are, and furthermore, can be purified to significantly increase their IVs, providing a much higher chance to obtain an iv100 (perfect IV) Pokémon. However, farming Team GO Rocket requires players to constantly spin PokéStops, engage in repetitive tapping battles, and manually catch the Pokémon. You can see how tedious and time-consuming it is to manually farm a large number of Shadow Pokémons to get a perfect or powerful one.
 
-原本想說一樣做成大家都可以用的通用版本，但做著做著就懶了，索性就做個自用的簡易版本，所以也懶得寫教學。
+## Overview
+This game bot application can fully automatically send your game position to the nearest invaded PokéStops based on your selected target types, click the stop, engage in battle with the Team GO Rocket grunt using your pre-set battle parties, and automatically catch the Shadow Pokémon after winning. It even supports automatic healing and reviving!
 
-啊不然乘勝追擊直接再來開發純 App 版好了，是時候了！
+Equipment and Software Requirements:
+  1. A rooted Android phone with GPS JoyStick ([Google Play][1]) installed **IN THE SYSTEM**, install uiautomator2 ([Github][5]) services such as ATX-agent (may not be necessary for the new version), and of course, install Pokémon GO.
+  2. A Windows computer.
+  3. scrcpy ([Github][2], [scrcpy-win64-v2.0 download link][3]), this application mirrors Android devices connected via USB or over TCP/IP, and allows to control the device with the keyboard and the mouse of the computer.
+  4. NemoADB by PokeNemo ([Official Website][4]), NemoADB is a GUI program useful to speed up your shundo snipe if you have an Android device with GPS Joystick and a Windows PC.
+
+[1]: https://play.google.com/store/apps/details?id=com.theappninjas.fakegpsjoystick
+[2]: https://github.com/Genymobile/scrcpy
+[3]: https://github.com/Genymobile/scrcpy/releases/download/v2.0/scrcpy-win64-v2.0.zip
+[4]: https://www.pokenemo.com/nemoadb/
+[5]: https://github.com/openatx/uiautomator2
+
+## How to use, For users
+
+懶得寫教學。
+ 
+## Make updates, For Developers or the future ?
+
+直接接著做純手機版好了，是時候了。
 
 ---
 
