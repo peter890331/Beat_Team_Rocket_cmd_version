@@ -1,6 +1,12 @@
 # Beat_Team_Rocket_cmd_version
 Beat_Team_Rocket_v2.0, made by Peter Yu.  
 
+另有 APP 版本，[Beat_Team_Rocket_App][100]。
+
+[100]: https://github.com/peter890331/Beat_Team_Rocket_App
+
+# 沒在維護了！
+
 > 一個在Pokémon GO中自動打火箭隊手下並捕捉暗影寶可夢的外掛腳本。    
 > A game bot script that automatically defeats Team GO Rocket Grunts and catches Shadow Pokémon in Pokémon GO.
 >
@@ -8,7 +14,7 @@ Beat_Team_Rocket_v2.0, made by Peter Yu.
 
 ### ❗ 警告：僅以此練習程式編寫，請勿在遊戲中使用外掛，否則後果自負！本人對此內容不負任何法律責任。 ❗    
 ### ❗ WARNING: Practice programming only, please do not use it to cheat on the game!     
-### The consequences are your own! I will not be responsible for any law liability to this content. ❗    
+### The consequences are your own! I will not be responsible for any law liability to this content. ❗   
  <img src= "https://github.com/user-attachments/assets/11c061cf-dfd8-4be4-92c4-b09ad62fbd04" width="300px">
 
 ---
@@ -47,7 +53,7 @@ Equipment and Software Requirements:
 
 ---
 
-### ❗ 警告：僅以此練習程式編寫，請勿在遊戲中使用外掛，否則後果自負！本人對此內容不負任何法律責任。 ❗    
-### ❗ WARNING: Practice programming only, please do not use it to cheat on the game!     
+### ❗ 再次警告：僅以此練習程式編寫，請勿在遊戲中使用外掛，否則後果自負！本人對此內容不負任何法律責任。 ❗    
+### ❗ WARNING AGAIN: Practice programming only, please do not use it to cheat on the game!     
 ### The consequences are your own! I will not be responsible for any law liability to this content. ❗    
 
