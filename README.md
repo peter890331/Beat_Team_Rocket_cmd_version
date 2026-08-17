@@ -5,7 +5,7 @@ Beat_Team_Rocket_v2.0, made by Peter Yu.
 
 [100]: https://github.com/peter890331/Beat_Team_Rocket_App
 
-<a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=22&pause=1000&color=36BCF7&center=false&vCenter=false&width=1200&lines=沒在維護了，PokeList+的網頁版不提供火箭隊座標了。;No+longer+maintained.+PokeList+web+no+longer+provides+Team+Rocket+coords." alt="Typing SVG" /></a>
+<a href="https://github.com/peter890331/Beat_Team_Rocket_cmd_version"><img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=22&pause=1000&color=36BCF7&center=false&vCenter=false&width=1200&lines=沒在維護了，PokeList+的網頁版不提供火箭隊座標了。;No+longer+maintained.+PokeList+web+no+longer+provides+Team+Rocket+coords." alt="Typing SVG" /></a>
 
 > 一個在Pokémon GO中自動打火箭隊手下並捕捉暗影寶可夢的外掛腳本。    
 > A game bot script that automatically defeats Team GO Rocket Grunts and catches Shadow Pokémon in Pokémon GO.
